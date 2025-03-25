@@ -1,0 +1,67 @@
+About RSU SCRIPT: rsu_wait_and_send.py file
+
+This script runs on a Roadside Unit (RSU). It listens for an "I'm ready" signal from an On-Board Unit (OBU).
+Once the OBU is detected, the RSU sends crack detection images (with metadata) in base64 chunks using WSMP.
+
+
+1. Imports:
+
+- time, json, base64, os: Standard Python modules for timing, data formatting, encoding, and file handling.
+- logging: For console output that includes timestamps and log levels.
+- PIL.Image, io: For compressing and converting images.
+- threading.Event: Used to pause and resume the script based on an external trigger (OBU detected).
+- pycmssdk: Commsignia SDK for interacting with V2X hardware using WSMP messages.
+
+2. Configuration Variables:
+
+- V2X_STACK_IP: IP address of the RSU device.
+- IMAGE_SEND_PSID: PSID used to send image data.
+- OBU_SIGNAL_PSID: PSID used to listen for OBU "I'm here" messages.
+- CHUNK_SIZE: Maximum number of bytes to send per WSMP packet (1024 is safe and standard).
+- READY_EVENT: Threading event used to wait until an OBU is detected.
+
+3. Logging Setup:
+
+- Sets up timestamped logging to make outputs readable and professional.
+
+4. CRACK_DATA:
+
+- A hardcoded list of crack image files with metadata including severity, location, and crack type.
+
+5. current_millis():
+
+- Utility function to get the current time in milliseconds. Used for measuring transmission delays.
+
+6. compress_image_to_base64(image_path):
+
+- Opens the image, converts it to grayscale, resizes to 256x256, compresses to JPEG, and encodes it in base64.
+- Returns a string that can be easily chunked and sent over WSMP.
+
+7. send_images(api):
+
+- Takes the API object and sends each image in chunks.
+- Each chunk is built with metadata and data.
+- Metadata is only sent in the first chunk.
+- Loops over each image and its chunks and sends them with a short delay in between.
+
+8. obu_signal_callback(...):
+
+- Called when the RSU receives any WSMP message on the OBU_SIGNAL_PSID.
+- Checks if the message is an "OBU ready" signal.
+- If so, sets the READY_EVENT to allow transmission.
+
+9. wait_and_send():
+
+- Connects to the V2X stack.
+- Subscribes to listen for OBU messages.
+- Waits for the READY_EVENT signal before starting to send.
+- Sends all crack images and then waits again.
+
+10. main():
+
+- Just runs wait_and_send(). This is the main entry point.
+
+11. if __name__ == "__main__":
+
+- Makes sure the script only runs when executed directly (not when imported).
+"""
