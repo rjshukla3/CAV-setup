@@ -1,0 +1,58 @@
+About OBU SCRIPT: obu_send_and_receive.py file
+
+This script basically runs on an On-Board Unit (OBU). It does two things at the same time:
+1. It broadcasts a "ready" message every few seconds so the RSU knows an OBU is nearby.
+2. It listens for image data from the RSU (sent in chunks), reassembles the image, and saves it.
+
+Every received image is saved to a folder, and the time taken to receive it is logged in a CSV file.
+
+1. Imports:
+
+- time, json, base64, os: Used for time, JSON formatting, image encoding/decoding, file operations.
+- logging: Gives clear output with timestamps and error levels.
+- threading.Thread: Lets the announce and receive parts run at the same time.
+- collections.defaultdict: Helps collect chunks of an image.
+- datetime: Not used in the current version but commonly imported for timestamps.
+- pycmssdk: Commsignia SDK for sending and receiving WSMP messages.
+
+2. Configuration:
+
+- V2X_STACK_IP: IP address of the OBU or V2X device.
+- SEND_PSID: PSID used to send "I'm here" messages to the RSU.
+- RECEIVE_PSID: PSID used to receive image chunks from the RSU.
+- OUTPUT_DIR: Folder where received images will be saved.
+- LOG_FILE: File where metadata and time delay for each image will be logged.
+- CHUNK_STORE: Temporary dictionary to store image chunks.
+- METADATA_STORE: Dictionary to store crack info associated with an image.
+
+3. current_millis():
+
+- Returns current time in milliseconds.
+- Used to track how long it takes to receive an image after the RSU sends it.
+
+4. announce_obu():
+
+- Runs in the background and keeps sending "I'm ready" messages every 2 seconds.
+- This lets the RSU know there is an OBU nearby.
+
+5. save_and_log_image():
+
+- Called once a full image is received.
+- Converts the base64 data back to image, saves it to disk.
+- Then logs metadata (severity, type, location) and the time delay to a CSV file.
+
+6. receive_data():
+
+- Listens for incoming image chunks from RSU using WSMP.
+- When chunks come in, it stores them by image_id.
+- When all chunks for an image are received, it reassembles and saves the image.
+
+7. main():
+
+- Starts both announce_obu() and receive_data().
+- announce_obu() runs in a separate thread so it doesn't block receiving data.
+
+8. if __name__ == "__main__":
+
+- Runs main() only when script is run directly.
+"""
